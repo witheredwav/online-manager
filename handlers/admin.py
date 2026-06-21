@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFi
 from telegram.ext import ContextTypes
 from db.init_db import SessionLocal
 from db.models import User, Engineer, Booking, Setting, EngineerDayOff, Review
-from utils.formatting import format_datetime, get_engineer_name
+from utils.formatting import format_datetime, get_engineer_name, is_slot_free
 import io
 import datetime
 import os
@@ -238,7 +238,7 @@ async def adm_night_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text="Для ночной записи укажите Telegram‑ID клиента, дату (ГГГГ‑ММ‑ДД), время начала (ЧЧ:ММ) и длительность в часах через пробел.\nПример: 123456789 2026-07-15 23:00 3",
+        text="Для ночной записи укажите Telegram‑ID клиента, дату (ГГГГ‑ММ‑ДД), время начало (ЧЧ:ММ) и длительность в часах через пробел.\nПример: 123456789 2026-07-15 23:00 3",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад", callback_data="admin_menu")]]),
     )
     context.user_data["awaiting"] = "night_booking"

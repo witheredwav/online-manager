@@ -1,7 +1,8 @@
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from db.init_db import SessionLocal
-from db.models import Booking, User
+from db.models import Booking, User, Setting
 import asyncio
+import datetime
 
 async def notify_new_booking(application, booking_id: int, engineer_tg_id: int | None = None):
     with SessionLocal() as s:
