@@ -3,10 +3,10 @@ from telegram.ext import ContextTypes
 from db.init_db import SessionLocal
 from db.models import User, Engineer, Booking, Setting, EngineerDayOff, Review
 from utils.formatting import format_datetime, get_engineer_name
-import pandas as pd
 import io
 import datetime
 import os
+from openpyxl import Workbook
 
 ADMIN_IDS = set(int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x)
 
@@ -133,22 +133,28 @@ async def adm_export_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     Booking.start_time < datetime.datetime.combine(next_first, datetime.time.min))
             .all()
         )
-    data = []
+    # Create Excel workbook using openpyxl
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Report"
+    # Header
+    headers = ["ID", "Дата", "Время начала", "Время конца", "Часы", "Клиент ID", "Инженер ID", "Статус", "Цена"]
+    ws.append(headers)
     for b in bookings:
-        data.append({
-            "ID": b.id,
-            "Дата": b.start_time.strftime("%d.%m.%Y"),
-            "Время начала": b.start_time.strftime("%H:%M"),
-            "Время конца": b.end_time.strftime("%H:%M"),
-            "Часы": b.duration_hours,
-            "Клиент ID": b.client_id,
-            "Инженер ID": b.engineer_id,
-            "Статус": b.status,
-            "Цена": b.price,
-        })
-    df = pd.DataFrame(data)
+        row = [
+            b.id,
+            b.start_time.strftime("%d.%m.%Y"),
+            b.start_time.strftime("%H:%M"),
+            b.end_time.strftime("%H:%M"),
+            b.duration_hours,
+            b.client_id,
+            b.engineer_id,
+            b.status,
+            float(b.price) if b.price is not None else None,
+        ]
+        ws.append(row)
     buffer = io.BytesIO()
-    df.to_excel(buffer, index=False)
+    wb.save(buffer)
     buffer.seek(0)
     await query.message.reply_document(
         document=InputFile(buffer, filename=f"report_{today:%Y_%m}.xlsx"),
